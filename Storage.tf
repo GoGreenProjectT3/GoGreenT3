@@ -164,7 +164,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-b" {
     status = "Enabled"
   }
 }
-=======
+
 # Create SysAdmin Group and Users
 resource "aws_iam_group" "SysAdmin" {
   name = "SysAdmin"
@@ -292,4 +292,22 @@ resource "aws_iam_account_password_policy" "strict" {
 }
 
 # Create and attach roles
->>>>>>> 6d8e3203758daaba39d73c9af4dc83146a66c6fc
+# 6d8e3203758daaba39d73c9af4dc83146a66c6fc
+
+# Create route53_zone
+resource "aws_route53_zone" "gogreen_aws" {
+  name = "gogreen.com"
+
+  tags = {
+    Environment = "dev"
+  }
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.gogreen_aws.zone_id
+  name    = "www.gogreen.com"
+  type    = "A"
+  ttl     = "300"
+  records = [aws_eip.eip.public_ip]
+}
+
