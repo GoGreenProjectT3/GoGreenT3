@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+#<<<<<<< HEAD
 #Creating S3bucket
 resource "aws_s3_bucket" "a" {
   bucket = "my-ggn-bucket"
