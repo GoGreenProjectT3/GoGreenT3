@@ -1,144 +1,127 @@
-# Create VPC
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "Vpc-Insurance"
-  }
+# Create SysAdmin Group and Users
+resource "aws_iam_group" "SysAdmin" {
+  name = "SysAdmin"
 }
 
-# Create Public Subnet
-resource "aws_subnet" "public_subnet1a" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-1a"
-  tags = {
-    Name = "Public-Subnet1"
-  }
-}
-# Create Public Subnet
-resource "aws_subnet" "public_subnet2b" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-1b"
-  tags = {
-    Name = "Public-Subnet2"
-  }
+resource "aws_iam_user" "Sysadmin1" {
+  name = "Sysadmin1"
 }
 
-# Create Private Subnet
-resource "aws_subnet" "private_subnet1a" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-west-1a"
-  tags = {
-    Name = "Private-Subnet1"
-  }
-}
-# Create Private Subnet
-resource "aws_subnet" "private_subnet2b" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = "us-west-1b"
-  tags = {
-    Name = "Private-Subnet2"
-  }
-}
-# Create Private Subnet
-resource "aws_subnet" "private_subnet3a" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.5.0/24"
-  availability_zone = "us-west-1a"
-  tags = {
-    Name = "Private-Subnet3"
-  }
-}
-# Create Private Subnet
-resource "aws_subnet" "private_subnet4b" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.6.0/24"
-  availability_zone = "us-west-1b"
-  tags = {
-    Name = "Private-Subnet4"
-  }
+resource "aws_iam_user" "Sysadmin2" {
+  name = "Sysadmin2"
 }
 
-# Creating Internet Gateway
-resource "aws_internet_gateway" "internet_gateway" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "Internet-Gateway"
-  }
+# Asign Sysadmin users to SysAdmin Group
+resource "aws_iam_group_membership" "assignment1" {
+  name = "sysadmin-membership"
+
+  users = [
+    aws_iam_user.Sysadmin1.name,
+    aws_iam_user.Sysadmin2.name
+  ]
+
+  group = aws_iam_group.SysAdmin.name
 }
 
-# NAT Gateway
-resource "aws_nat_gateway" "nat_gateway" {
-  connectivity_type = "private"
-  subnet_id         = aws_subnet.public_subnet1a.id
-  tags = {
-    Name = "NAT-Gateway"
-  }
+# Attaching policy to SysAdmin Group
+resource "aws_iam_group_policy_attachment" "admin" {
+  group      = aws_iam_group.SysAdmin.name
+  policy_arn = "arn:aws:iam::aws:policy/job-function/SystemAdministrator"
 }
 
-
-# Creating Public Route Table
-resource "aws_route_table" "public_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.internet_gateway.id
-  }
-
-  tags = {
-    Name = "Public-route-Table"
-  }
+# Create DBAdmin Group and users
+resource "aws_iam_group" "DBAdmin" {
+  name = "DBAdmin"
 }
 
-# Creating Private Route Table
-resource "aws_route_table" "private_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.nat_gateway.id
-    
-  }
-
-  tags = {
-    Name = "Private-route-Table"
-  }
+resource "aws_iam_user" "dbadmin1" {
+  name = "dbadmin1"
 }
 
-
-# Route Table association with Public Subnet
-resource "aws_route_table_association" "public1" {
-  subnet_id      = aws_subnet.public_subnet1a.id 
-  route_table_id = aws_route_table.public_route_table.id
-}
-# Route Table association with Public Subnet
-resource "aws_route_table_association" "public2" {
-  subnet_id      = aws_subnet.public_subnet2b.id 
-  route_table_id = aws_route_table.public_route_table.id
+resource "aws_iam_user" "dbadmin2" {
+  name = "dbadmin2"
 }
 
+# Asign dbadmin users to DBAdmin Group
+resource "aws_iam_group_membership" "assignment2" {
+  name = "dbadmin-membership"
 
-# Route Table association with Private Subnet
-resource "aws_route_table_association" "private1" {
-  subnet_id      = aws_subnet.private_subnet1a.id
-  route_table_id = aws_route_table.private_route_table.id
+  users = [
+    aws_iam_user.dbadmin1.name,
+    aws_iam_user.dbadmin2.name
+  ]
+
+  group = aws_iam_group.DBAdmin.name
 }
-# Route Table association with Private Subnet
-resource "aws_route_table_association" "private2" {
-  subnet_id      = aws_subnet.private_subnet2b.id 
-  route_table_id = aws_route_table.private_route_table.id
+
+# Attaching policy to DBAdmin Group
+resource "aws_iam_group_policy_attachment" "database" {
+  group      = aws_iam_group.DBAdmin.name
+  policy_arn = "arn:aws:iam::aws:policy/job-function/DatabaseAdministrator"
 }
-# Route Table association with Private Subnet
-resource "aws_route_table_association" "private3" {
-  subnet_id      = aws_subnet.private_subnet3a.id
-  route_table_id = aws_route_table.private_route_table.id
+
+# Create Monitor Group and Minitorusers
+resource "aws_iam_group" "Monitor" {
+  name = "Monitor"
 }
-# Route Table association with Private Subnet
-resource "aws_route_table_association" "private4" {
-  subnet_id      = aws_subnet.private_subnet4b.id
-  route_table_id = aws_route_table.private_route_table.id
+
+resource "aws_iam_user" "monitoruser1" {
+  name = "monitoruser1"
 }
+
+resource "aws_iam_user" "monitoruser2" {
+  name = "monitoruser2"
+}
+
+resource "aws_iam_user" "monitoruser3" {
+  name = "monitoruser3"
+}
+
+resource "aws_iam_user" "monitoruser4" {
+  name = "monitoruser4"
+}
+
+# Asign monitorusers to Monitor Group
+resource "aws_iam_group_membership" "assignment3" {
+  name = "monitor-membership"
+
+  users = [
+    aws_iam_user.monitoruser1.name,
+    aws_iam_user.monitoruser2.name,
+    aws_iam_user.monitoruser3.name,
+    aws_iam_user.monitoruser4.name
+  ]
+
+  group = aws_iam_group.Monitor.name
+}
+
+# Attaching policies to Monitor Group
+resource "aws_iam_group_policy_attachment" "ec2" {
+  group      = aws_iam_group.Monitor.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+}
+
+resource "aws_iam_group_policy_attachment" "s3" {
+  group      = aws_iam_group.Monitor.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_group_policy_attachment" "RDS" {
+  group      = aws_iam_group.Monitor.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
+# Create Password Policy for users
+resource "aws_iam_account_password_policy" "strict" {
+  minimum_password_length        = 8
+  max_password_age               = 90
+  password_reuse_prevention      = 3
+  require_lowercase_characters   = true
+  require_numbers                = true
+  require_uppercase_characters   = true
+  require_symbols                = true
+  allow_users_to_change_password = true
+  
+}
+
+# Create and attach roles
