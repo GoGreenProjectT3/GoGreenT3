@@ -1,34 +1,70 @@
-
-
-resource "aws_security_group" "allow_http" {
-  name        = "allow_http"
-  description = "Allow HTTP inbound connections"
+# Create Security Group for the Web Server
+# terraform aws create security group
+resource "aws_security_group" "webserver-security-group" {
+  name        = "Web Server Security Group"
+  description = "Enable HTTP/HTTPS access on Port 80/443 via ALB and SSH access on Port 22 via SSH SG"
   vpc_id      = aws_vpc.main.id
-
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "SSH Access"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
   }
-
+  ingress {
+    description     = "HTTP"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+  ingress {
+    description     = "HTTPS"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   tags = {
-    Name = "Allow HTTP Security Group"
+    Name = "Web Server Security Group"
   }
 }
+
+# resource "aws_security_group" "allow_http" {
+#   name        = "allow_http"
+#   description = "Allow HTTP inbound connections"
+#   vpc_id      = aws_vpc.main.id
+
+#   ingress {
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   tags = {
+#     Name = "Allow HTTP Security Group"
+#   }
+# }
 resource "aws_launch_configuration" "web" {
   name_prefix = "web-"
 
   image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
-  security_groups             = [aws_security_group.allow_http.id]
+  security_groups             = [aws_security_group.webserver-security-group.id]
   associate_public_ip_address = true
   user_data                   = file("user_data.sh")
   lifecycle {
@@ -191,7 +227,7 @@ resource "aws_launch_configuration" "app" {
 
   image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
-  security_groups             = [aws_security_group.allow_http.id]
+  security_groups             = [aws_security_group.webserver-security-group.id]
   associate_public_ip_address = true
   user_data                   = file("user_data.sh")
   lifecycle {

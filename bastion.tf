@@ -1,6 +1,7 @@
 resource "aws_instance" "bastion" {
   ami                         = "ami-0d9858aa3c6322f73"
   subnet_id                   = aws_subnet.public_subnet1a.id
+  vpc_id                      = aws_vpc.main.id
   instance_type               = "t2-micro"
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true
@@ -30,84 +31,118 @@ resource "aws_security_group" "bastion" {
   name        = "Bastion host"
   description = "Allow SSH access to bastion host and outbound internet access"
   vpc_id      = aws_vpc.main.id
+  ingress {
+    description = "HTTP"
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+  }
+  ingress {
+    description = "SSH"
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-resource "aws_security_group_rule" "ssh" {
-  protocol          = "TCP"
-  from_port         = 22
-  to_port           = 22
-  type              = "ingress"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.bastion.id
-}
+# resource "aws_security_group_rule" "ssh" {
+#   protocol          = "TCP"
+#   from_port         = 22
+#   to_port           = 22
+#   type              = "ingress"
+#   cidr_blocks       = ["0.0.0.0/0"]
+#   security_group_id = aws_security_group.bastion.id
+# }
 
-resource "aws_security_group_rule" "internet" {
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  type              = "egress"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.bastion.id
-}
+# # resource "aws_security_group_rule" "internet" {
+# #   protocol          = "-1"
+# #   from_port         = 0
+# #   to_port           = 0
+# #   type              = "egress"
+# #   cidr_blocks       = ["0.0.0.0/0"]
+# #   security_group_id = aws_security_group.bastion.id
+# # }
 
-resource "aws_security_group_rule" "intranet" {
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  type              = "egress"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.bastion.id
-}
-# Create Security Group for the Bastion Host aka Jump Box
-# terraform aws create security group
-resource "aws_security_group" "ssh-security-group" {
-  name        = "SSH Security Group"
-  description = "Enable SSH access on Port 22"
-  vpc_id      = aws_vpc.main.id
-  ingress {
-    description = "SSH Access"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${var.ssh-location}"]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  tags = {
-    Name = "SSH Security Group"
-  }
-}
-# Create Security Group for the Web Server
-# terraform aws create security group
-resource "aws_security_group" "webserver-security-group" {
-  name        = "Web Server Security Group"
-  description = "Enable HTTP/HTTPS access on Port 80/443 via ALB and SSH access on Port 22 via SSH SG"
-  vpc_id      = aws_vpc.main.id
-  ingress {
-    description     = "SSH Access"
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = ["${aws_security_group.ssh-security-group.id}"]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  tags = {
-    Name = "Web Server Security Group"
-  }
-}
+# # resource "aws_security_group_rule" "intranet" {
+# #   protocol          = "-1"
+# #   from_port         = 0
+# #   to_port           = 0
+# #   type              = "egress"
+# #   cidr_blocks       = ["0.0.0.0/0"]
+# #   security_group_id = aws_security_group.bastion.id
+# # }
+# # Create Security Group for the Bastion Host aka Jump Box
+# # terraform aws create security group
+# resource "aws_security_group" "ssh-security-group" {
+#   name        = "SSH Security Group"
+#   description = "Enable SSH access on Port 22"
+#   vpc_id      = aws_vpc.main.id
+#   ingress {
+#     description = "SSH Access"
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = ["${var.ssh-location}"]
+#   }
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+#   tags = {
+#     Name = "SSH Security Group"
+#   }
+# }
+# # Create Security Group for the Web Server
+# # terraform aws create security group
+# resource "aws_security_group" "webserver-security-group" {
+#   name        = "Web Server Security Group"
+#   description = "Enable HTTP/HTTPS access on Port 80/443 via ALB and SSH access on Port 22 via SSH SG"
+#   vpc_id      = aws_vpc.main.id
+#   ingress {
+#     description     = "SSH Access"
+#     from_port       = 22
+#     to_port         = 22
+#     protocol        = "tcp"
+#     security_groups = [aws_security_group.bastion.id]
+#   }
+#   ingress {
+#     description = "HTTP"
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     security_groups = [aws_security_group.bastion.id]
+#   }
+#   ingress {
+#     description = "HTTPS"
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     security_groups = [aws_security_group.bastion.id]
+#   }
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+#   tags = {
+#     Name = "Web Server Security Group"
+#   }
+# }
 /*#Create a new EC2 launch configuration
 resource "aws_instance" "ec2_public" {
 ami                    = "ami-0eb7496c2e0403237"

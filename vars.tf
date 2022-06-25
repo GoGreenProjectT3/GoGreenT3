@@ -7,7 +7,7 @@ variable "subnet_cidrs_private_1a" {
 
 variable "subnet_cidrs_private_1c" {
   description = "CIDR for Private Subnets"
-  default     = [ "10.0.5.0/24", "10.0.6.0/24"]
+  default     = ["10.0.5.0/24", "10.0.6.0/24"]
   type        = list(any)
 }
 variable "ssh-location" {

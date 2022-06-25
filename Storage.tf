@@ -17,7 +17,7 @@ resource "aws_s3_bucket_acl" "example" {
 # resource "aws_s3_bucket" "b" {
 #   bucket = "s3-website-test.hashicorp.com"
 #   acl    = "public-read"
- 
+
 #   website {
 #     index_document = "index.html"
 #     error_document = "error.html"
@@ -98,7 +98,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "b" {
     }
 
     transition {
-      days          =60
+      days          = 60
       storage_class = "GLACIER"
     }
   }
@@ -288,7 +288,7 @@ resource "aws_iam_account_password_policy" "strict" {
   require_uppercase_characters   = true
   require_symbols                = true
   allow_users_to_change_password = true
-  
+
 }
 
 # Create and attach roles

@@ -86,7 +86,7 @@ resource "aws_nat_gateway" "nat_gateway1" {
 }
 
 
-  
+
 # #Route for NAT
 # resource "aws_route" "nat_gateway1" {
 #   route_table_id = aws_route_table.private_route_table.id
@@ -122,7 +122,7 @@ resource "aws_route_table" "private_route_table" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_nat_gateway.nat_gateway1.id
-    
+
   }
 
   tags = {
@@ -135,12 +135,12 @@ resource "aws_route_table" "private_route_table" {
 
 # Route Table association with Public Subnet
 resource "aws_route_table_association" "public1" {
-  subnet_id      = aws_subnet.public_subnet1a.id 
+  subnet_id      = aws_subnet.public_subnet1a.id
   route_table_id = aws_route_table.public_route_table.id
 }
 # Route Table association with Public Subnet
 resource "aws_route_table_association" "public2" {
-  subnet_id      = aws_subnet.public_subnet2c.id 
+  subnet_id      = aws_subnet.public_subnet2c.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
@@ -152,7 +152,7 @@ resource "aws_route_table_association" "private1" {
 }
 # Route Table association with Private Subnet
 resource "aws_route_table_association" "private2" {
-  subnet_id      = aws_subnet.private_subnet2c.id 
+  subnet_id      = aws_subnet.private_subnet2c.id
   route_table_id = aws_route_table.private_route_table.id
 }
 # Route Table association with Private Subnet
