@@ -70,14 +70,35 @@ resource "aws_internet_gateway" "internet_gateway" {
   }
 }
 
-# NAT Gateway
-resource "aws_nat_gateway" "nat_gateway" {
-  connectivity_type = "private"
-  subnet_id         = aws_subnet.public_subnet1a.id
+# Creating EIP
+resource "aws_eip" "nat_gateway1" {
+  vpc = true
+}
+
+# Creating NAT Gateway
+resource "aws_nat_gateway" "nat_gateway1" {
+  allocation_id = aws_eip.nat_gateway1.id
+  subnet_id     = aws_subnet.public_subnet1a.id
+
   tags = {
-    Name = "NAT-Gateway"
+    Name = "gw NAT"
   }
 }
+
+
+  
+# #Route for NAT
+# resource "aws_route" "nat_gateway1" {
+#   route_table_id = aws_route_table.private_route_table.id
+#   destination_cidr_block = "0.0.0.0/0"
+#   nat_gateway_id = aws_nat_gateway.nat_gateway1.id
+# }
+# #Route for NAT
+# resource "aws_route" "nat_gateway2" {
+#   route_table_id = aws_route_table.private_route_table.id
+#   destination_cidr_block = "0.0.0.0/0"
+#   nat_gateway_id = aws_nat_gateway.nat_gateway2.id
+# }
 
 
 # Creating Public Route Table
@@ -100,7 +121,7 @@ resource "aws_route_table" "private_route_table" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.nat_gateway.id
+    gateway_id = aws_nat_gateway.nat_gateway1.id
     
   }
 
@@ -108,6 +129,8 @@ resource "aws_route_table" "private_route_table" {
     Name = "Private-route-Table"
   }
 }
+
+
 
 
 # Route Table association with Public Subnet
