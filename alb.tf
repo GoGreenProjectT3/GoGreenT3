@@ -1,6 +1,6 @@
 # Create Security Group for the Web Server
 # terraform aws create security group
-resource "aws_security_group" "webserver-security-group" {
+resource "aws_security_group" "webserver-security-group2" {
   name        = "Web Server Security Group"
   description = "Enable HTTP/HTTPS access on Port 80/443 via ALB and SSH access on Port 22 via SSH SG"
   vpc_id      = aws_vpc.main.id
@@ -20,8 +20,8 @@ resource "aws_security_group" "webserver-security-group" {
   }
   ingress {
     description     = "HTTPS"
-    from_port       = 80
-    to_port         = 80
+    from_port       = 443
+    to_port         = 443
     protocol        = "tcp"
     security_groups = [aws_security_group.bastion.id]
   }
@@ -32,7 +32,7 @@ resource "aws_security_group" "webserver-security-group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name = "Web Server Security Group"
+    Name = "Web Server Security Group2"
   }
 }
 
@@ -64,7 +64,7 @@ resource "aws_launch_configuration" "web" {
 
   image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
-  security_groups             = [aws_security_group.webserver-security-group.id]
+  security_groups             = [aws_security_group.webserver-security-group2.id]
   associate_public_ip_address = false
   user_data                   = file("user_data.sh")
   lifecycle {
@@ -227,7 +227,7 @@ resource "aws_launch_configuration" "app" {
 
   image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
-  security_groups             = [aws_security_group.webserver-security-group.id]
+  security_groups             = [aws_security_group.webserver-security-group2.id]
   associate_public_ip_address = false
   user_data                   = file("user_data.sh")
   lifecycle {
