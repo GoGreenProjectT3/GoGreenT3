@@ -10,3 +10,16 @@ variable "subnet_cidrs_private_1c" {
   default     = [ "10.0.5.0/24", "10.0.6.0/24"]
   type        = list(any)
 }
+variable "ssh-location" {
+  default     = "0.0.0.0/0"
+  description = "SSH variable for bastion host"
+  type        = string
+}
+
+variable "key_name" {
+  default = "LL-TEST"
+  type    = string
+}
+
+
+

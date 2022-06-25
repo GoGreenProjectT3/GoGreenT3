@@ -302,6 +302,10 @@ resource "aws_route53_zone" "gogreen_aws" {
     Environment = "dev"
   }
 }
+# Creating EIP
+resource "aws_eip" "eip_r53" {
+  vpc = true
+}
 
 
 resource "aws_route53_record" "www" {
@@ -309,6 +313,6 @@ resource "aws_route53_record" "www" {
   name    = "www.gogreen.com"
   type    = "A"
   ttl     = "300"
-  records = [aws_eip.gogreen.id]
+  records = [aws_eip.eip_r53.id]
 }
 

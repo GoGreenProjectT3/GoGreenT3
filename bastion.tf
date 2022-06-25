@@ -1,6 +1,6 @@
 resource "aws_instance" "bastion" {
   ami                         = "ami-0d9858aa3c6322f73"
-  subnet_id                   = aws_subnet.public_us_west_1a.id
+  subnet_id                   = aws_subnet.public_subnet1a.id
   instance_type               = "t2-micro"
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true
@@ -29,7 +29,7 @@ resource "aws_key_pair" "key_pair" {
 resource "aws_security_group" "bastion" {
   name        = "Bastion host"
   description = "Allow SSH access to bastion host and outbound internet access"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = aws_vpc.main.id
 
   lifecycle {
     create_before_destroy = true
@@ -67,7 +67,7 @@ resource "aws_security_group_rule" "intranet" {
 resource "aws_security_group" "ssh-security-group" {
   name        = "SSH Security Group"
   description = "Enable SSH access on Port 22"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = aws_vpc.main.id
   ingress {
     description = "SSH Access"
     from_port   = 22
@@ -90,7 +90,7 @@ resource "aws_security_group" "ssh-security-group" {
 resource "aws_security_group" "webserver-security-group" {
   name        = "Web Server Security Group"
   description = "Enable HTTP/HTTPS access on Port 80/443 via ALB and SSH access on Port 22 via SSH SG"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = aws_vpc.main.id
   ingress {
     description     = "SSH Access"
     from_port       = 22

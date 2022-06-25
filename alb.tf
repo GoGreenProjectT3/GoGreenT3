@@ -3,7 +3,7 @@
 resource "aws_security_group" "allow_http" {
   name        = "allow_http"
   description = "Allow HTTP inbound connections"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 80
@@ -38,7 +38,7 @@ resource "aws_launch_configuration" "web" {
 resource "aws_security_group" "elb_http" {
   name        = "elb_http"
   description = "Allow HTTP traffic to instances through Elastic Load Balancer"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 80
@@ -78,8 +78,8 @@ resource "aws_elb" "web_elb" {
     aws_security_group.elb_http.id
   ]
   subnets = [
-    aws_subnet.public_us_west_1a.id,
-    aws_subnet.public_us_west_1c.id
+    aws_subnet.public_subnet1a.id,
+    aws_subnet.public_subnet2c.id
   ]
   cross_zone_load_balancing = true
 
@@ -122,7 +122,7 @@ resource "aws_autoscaling_group" "web" {
   ]
 
   metrics_granularity = "1Minute"
-  vpc_zone_identifier = aws_subnet.private_subnet.*.id
+  vpc_zone_identifier = [aws_subnet.private_subnet1a.id]
 
   # Required to redeploy without an outage.
   lifecycle {
@@ -205,8 +205,8 @@ resource "aws_elb" "app_elb" {
     aws_security_group.elb_http.id
   ]
   subnets = [
-    aws_subnet.public_us_west_1a.id,
-    aws_subnet.public_us_west_1c.id
+    aws_subnet.public_subnet1a.id,
+    aws_subnet.public_subnet2c.id
   ]
   cross_zone_load_balancing = true
 
@@ -249,7 +249,7 @@ resource "aws_autoscaling_group" "app" {
   ]
 
   metrics_granularity = "1Minute"
-  vpc_zone_identifier = aws_subnet.private_subnet.*.id
+  vpc_zone_identifier = [aws_subnet.private_subnet1a.id]
 
   # Required to redeploy without an outage.
   lifecycle {
