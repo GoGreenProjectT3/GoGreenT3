@@ -1,7 +1,6 @@
 resource "aws_instance" "bastion" {
   ami                         = "ami-0d9858aa3c6322f73"
   subnet_id                   = aws_subnet.public_subnet1a.id
-  vpc_id                      = aws_vpc.main.id
   instance_type               = "t2-micro"
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true

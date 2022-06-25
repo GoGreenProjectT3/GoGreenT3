@@ -65,7 +65,7 @@ resource "aws_launch_configuration" "web" {
   image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
   security_groups             = [aws_security_group.webserver-security-group.id]
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   user_data                   = file("user_data.sh")
   lifecycle {
     create_before_destroy = true
@@ -228,7 +228,7 @@ resource "aws_launch_configuration" "app" {
   image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
   security_groups             = [aws_security_group.webserver-security-group.id]
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   user_data                   = file("user_data.sh")
   lifecycle {
     create_before_destroy = true
