@@ -1,15 +1,13 @@
-provider "aws" {
-  region = "us-west-1"
-}
 
-terraform {
+
+/*terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 3.0"
     }
   }
-}
+}*/
 
 resource "aws_db_instance" "project-1" {
   allocated_storage    = 20

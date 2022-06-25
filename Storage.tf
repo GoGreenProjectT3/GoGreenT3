@@ -303,11 +303,12 @@ resource "aws_route53_zone" "gogreen_aws" {
   }
 }
 
+
 resource "aws_route53_record" "www" {
   zone_id = aws_route53_zone.gogreen_aws.zone_id
   name    = "www.gogreen.com"
   type    = "A"
   ttl     = "300"
-  records = [aws_eip.eip.public_ip]
+  records = [aws_eip.gogreen.id]
 }
 
