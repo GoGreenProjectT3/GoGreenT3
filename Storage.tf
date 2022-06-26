@@ -18,7 +18,7 @@ resource "aws_s3_bucket_acl" "example" {
 # resource "aws_s3_bucket" "b" {
 #   bucket = "s3-website-test.hashicorp.com"
 #   acl    = "public-read"
- 
+
 #   website {
 #     index_document = "index.html"
 #     error_document = "error.html"
@@ -86,7 +86,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "b" {
     }
 
     transition {
-      days          =60
+      days          = 60
       storage_class = "GLACIER"
     }
   }
@@ -277,7 +277,7 @@ resource "aws_iam_account_password_policy" "strict" {
   require_uppercase_characters   = true
   require_symbols                = true
   allow_users_to_change_password = true
-  
+
 }
 
 # Create and attach roles
@@ -300,13 +300,22 @@ resource "aws_route53_zone" "gogreen_aws" {
     Environment = "dev"
   }
 }
+# Creating EIP
+resource "aws_eip" "eip_r53" {
+  vpc = true
+}
+
 
 resource "aws_route53_record" "www" {
   zone_id = aws_route53_zone.gogreen_aws.zone_id
   name    = "www.gogreen.com"
   type    = "A"
   ttl     = "300"
+<<<<<<< HEAD
   records = [aws_eip.nat_gateway1.id]
+=======
+  records = [aws_eip.eip_r53.id]
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 }
 
 # Creating cloudfront_distribution

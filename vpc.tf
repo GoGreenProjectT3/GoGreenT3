@@ -58,7 +58,11 @@
 # }
 
 # # Create Private Subnet
+<<<<<<< HEAD
 # resource "aws_subnet" "private_subnet" {
+=======
+# resource "aws_subnet" "private_subnet1a" {
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 #   count             = length(var.subnet_cidrs_private_1a)
 #   vpc_id            = aws_vpc.main_vpc.id
 #   cidr_block        = var.subnet_cidrs_private_1a[count.index]
@@ -79,19 +83,49 @@
 #     Name = "Private-Subnet"
 #   }
 # }
+<<<<<<< HEAD
 
 # # NAT Gateway
 # resource "aws_nat_gateway" "nat_gateway1" {
 #   connectivity_type = "private"
+=======
+# resource "aws_eip" "gogreen" {
+#   vpc      = true
+# }
+
+
+# # NAT Gateway
+# resource "aws_nat_gateway" "nat_gateway1" {
+#   connectivity_type = "public"
+#   allocation_id = aws_eip.gogreen.id
+
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 #   subnet_id         = aws_subnet.public_us_west_1a.id
 
 #   tags = {
 #     Name = "NAT-GW1"
 #   }
 # }
+<<<<<<< HEAD
 
 # # Creating Private Route Table
 # resource "aws_route_table" "private_route_table" {
+=======
+# # NAT Gateway
+# resource "aws_nat_gateway" "nat_gateway2" {
+#   connectivity_type = "public"
+#   allocation_id = aws_eip.gogreen2.id
+
+#   subnet_id         = aws_subnet.public_us_west_1c.id
+
+#   tags = {
+#     Name = "NAT-GW2"
+#   }
+# }
+
+# # Creating Private Route Table1
+# resource "aws_route_table" "private_route_table1" {
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 #   vpc_id = aws_vpc.main_vpc.id
 
 #   route {
@@ -100,12 +134,42 @@
 #   }
 
 #   tags = {
+<<<<<<< HEAD
 #     Name = "Private-Table"
+=======
+#     Name = "Private-Table1"
+#   }
+# }
+# # Creating Private Route Table2
+# resource "aws_route_table" "private_route_table2" {
+#   vpc_id = aws_vpc.main_vpc.id
+
+#   route {
+#     cidr_block = "0.0.0.0/0"
+#     gateway_id = aws_nat_gateway.nat_gateway2.id
+#   }
+
+#   tags = {
+#     Name = "Private-Table2"
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 #   }
 # }
 # # Route Table association with Private Subnet
 # resource "aws_route_table_association" "b" {
+<<<<<<< HEAD
 #   subnet_id      = element(aws_subnet.private_subnet.*.id, count.index)
 #   count          = length(var.subnet_cidrs_private_1a)
 #   route_table_id = aws_route_table.private_route_table.id
 # }
+=======
+#   subnet_id      = element(aws_subnet.private_subnet1a.*.id, count.index)
+#   count          = length(var.subnet_cidrs_private_1a)
+#   route_table_id = aws_route_table.private_route_table1.id
+# }
+# # Route Table association with Private Subnet
+# resource "aws_route_table_association" "c" {
+#   subnet_id      = element(aws_subnet.private_subnet1c.*.id, count.index)
+#   count          = length(var.subnet_cidrs_private_1c)
+#   route_table_id = aws_route_table.private_route_table2.id
+# }
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
