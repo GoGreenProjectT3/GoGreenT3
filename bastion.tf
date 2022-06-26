@@ -4,6 +4,7 @@ resource "aws_instance" "bastion" {
   instance_type               = "t2.micro"
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   associate_public_ip_address = true
+  key_name = "TEST"
   tags = {
     "Name" = "Bastion-EC2"
   }
@@ -45,38 +46,12 @@ resource "aws_security_group" "bastion" {
 }
 // Generate the SSH keypair that we’ll use to configure the EC2 instance.
 // After that, write the private key to a local file and upload the public key to AWS
-resource "tls_private_key" "key" {
+resource "tls_private_key" "ssh" {
   algorithm = "RSA"
+  rsa_bits  = "4096" #new line
 }
-# resource "local_file" "private_key" {
-#   filename          = "TEST.pem"
-#   sensitive_content = local_sensitive_file.private_key #tls_private_key.key.private_key_pem
-#   file_permission   = "0400"
-# }
-resource "aws_key_pair" "key_pair" {
+resource "aws_key_pair" "TEST" {
   key_name   = "TEST"
-  public_key = tls_private_key.key.public_key_openssh
+  public_key = tls_private_key.ssh.public_key_openssh
 }
-
-# Copies the ssh key file to home dir
-# provisioner "file" {
-#   source      = "TEST.pem"
-#   destination = "/home/ec2-user/TEST.pem"
-#   connection {
-#     type        = "ssh"
-#     user        = "ec2-user"
-#     private_key = file("TEST.pem")
-#     host        = self.public_ip
-#   }
-# }
-# //chmod key 400 on EC2 instance
-# provisioner "remote-exec" {
-#   inline = ["chmod 400 ~/TEST.pem"]
-#   connection {
-#     type        = "ssh"
-#     user        = "ec2-user"
-#     private_key = file("TEST.pem")
-#     host        = self.public_ip
-#   }
-# }
 
