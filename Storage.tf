@@ -14,6 +14,7 @@ resource "aws_s3_bucket_acl" "example" {
   acl    = "private"
 }
 #Static Website Hosting
+
 # resource "aws_s3_bucket" "b" {
 #   bucket = "s3-website-test.hashicorp.com"
 #   acl    = "public-read"
@@ -36,9 +37,6 @@ resource "aws_s3_bucket_acl" "example" {
 # }
 
 # Creating CORS
-resource "aws_s3_bucket" "d" {
-  bucket = "my-ggn-bucket"
-}
 
 resource "aws_s3_bucket_cors_configuration" "b" {
   bucket = aws_s3_bucket.a.bucket
@@ -59,18 +57,8 @@ resource "aws_s3_bucket_cors_configuration" "b" {
 
 #Creating a Lifecycle Configuration for a bucket with versioning
 
-resource "aws_s3_bucket" "bucket" {
-  bucket = "my-ggn-bucket"
-  acl    = "private"
-}
-
-resource "aws_s3_bucket" "bucket_acl" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "b" {
-  bucket = aws_s3_bucket.bucket.bucket
+  bucket = aws_s3_bucket.a.bucket
 
   rule {
     id = "log"
@@ -135,6 +123,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-b" {
+
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.versioning]
 
@@ -294,9 +283,18 @@ resource "aws_iam_account_password_policy" "strict" {
 # Create and attach roles
 # 6d8e3203758daaba39d73c9af4dc83146a66c6fc
 
+# route53domains registered domain
+
+resource "aws_route53domains_registered_domain" "gogreen_aws" {
+  domain_name = "www.gogreen.com"
+
+}
+
 # Create route53_zone
+
 resource "aws_route53_zone" "gogreen_aws" {
-  name = "gogreen.com"
+  name = "www.gogreen.com"
+  
 
   tags = {
     Environment = "dev"
@@ -313,6 +311,116 @@ resource "aws_route53_record" "www" {
   name    = "www.gogreen.com"
   type    = "A"
   ttl     = "300"
+<<<<<<< HEAD
+  records = [aws_eip.nat_gateway1.id]
+=======
   records = [aws_eip.eip_r53.id]
+>>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 }
 
+# Creating cloudfront_distribution
+
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin {
+    domain_name = aws_s3_bucket.a.bucket_regional_domain_name
+    origin_id   = aws_s3_bucket.a.id
+
+    s3_origin_config {
+      origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
+    }
+  }
+
+  enabled             = true
+  #is_ipv4_enabled     = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = "mylogs.s3.amazonaws.com"
+    prefix          = "myprefix"
+  }
+
+  #aliases = ["mysite.example.com", "yoursite.example.com"]
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = aws_s3_bucket.a.id
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  # Cache behavior with precedence 0
+  ordered_cache_behavior {
+    path_pattern     = "/content/immutable/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
+    target_origin_id = aws_s3_bucket.a.id
+
+    forwarded_values {
+      query_string = false
+      headers      = ["Origin"]
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 31536000
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  # Cache behavior with precedence 1
+  ordered_cache_behavior {
+    path_pattern     = "/content/*"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = aws_s3_bucket.a.id
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  tags = {
+    Environment = "production"
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
