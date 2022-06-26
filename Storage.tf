@@ -14,6 +14,7 @@ resource "aws_s3_bucket_acl" "example" {
   acl    = "private"
 }
 #Static Website Hosting
+
 # resource "aws_s3_bucket" "b" {
 #   bucket = "s3-website-test.hashicorp.com"
 #   acl    = "public-read"
@@ -282,9 +283,17 @@ resource "aws_iam_account_password_policy" "strict" {
 # Create and attach roles
 # 6d8e3203758daaba39d73c9af4dc83146a66c6fc
 
+# route53domains registered domain
+
+resource "aws_route53domains_registered_domain" "gogreen_aws" {
+  domain_name = "www.gogreen.com"
+
+}
+
 # Create route53_zone
+
 resource "aws_route53_zone" "gogreen_aws" {
-  name = "gogreen.com"
+  name = "www.gogreen.com"
   
 
   tags = {
