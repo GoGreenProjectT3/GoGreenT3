@@ -46,14 +46,14 @@ resource "aws_security_group" "bastion" {
 }
 // Generate the SSH keypair that we’ll use to configure the EC2 instance.
 // After that, write the private key to a local file and upload the public key to AWS
-resource "tls_private_key" "ssh" {
-  algorithm = "RSA"
-  rsa_bits  = "4096" 
-}
-resource "aws_key_pair" "gogreen" {
-  key_name   = "gogreen"
-  public_key = tls_private_key.ssh.public_key_openssh
-  provisioner "local-exec" {
-    command = "echo '$(tls_private_key.ssh.private_key_pem)' > ./gogreen.pem"
-  }
-}
+# resource "tls_private_key" "ssh" {
+#   algorithm = "RSA"
+#   rsa_bits  = "4096" 
+# }
+# resource "aws_key_pair" "gogreen" {
+#   key_name   = "gogreen"
+#   public_key = tls_private_key.ssh.public_key_openssh
+#   provisioner "local-exec" {
+#     command = "echo '$(tls_private_key.ssh.private_key_pem)' > ./gogreen.pem"
+#   }
+# }
