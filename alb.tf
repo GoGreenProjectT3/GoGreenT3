@@ -258,7 +258,7 @@ resource "aws_autoscaling_group" "app" {
 
   health_check_type = "ELB"
   load_balancers = [
-    aws_elb.web_elb.id
+    aws_elb.app_elb.id
   ]
 
   launch_configuration = aws_launch_configuration.app.name
