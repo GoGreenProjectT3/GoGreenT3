@@ -1,28 +1,4 @@
-<<<<<<< HEAD
-# provider "aws" {
-#   region = "us-west-1"
-# }
 
-# terraform {
-#   required_providers {
-#     aws = {
-#       source  = "hashicorp/aws"
-#       version = "~> 3.0"
-#     }
-#   }
-# }
-=======
-
-
-/*terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.0"
-    }
-  }
-}*/
->>>>>>> 8dd1ab5862f8bf5be677a0a5f09c4cd221890aaf
 
 resource "aws_db_instance" "project-1" {
   allocated_storage    = 20
@@ -49,4 +25,43 @@ resource "aws_db_instance" "project-2" {
   parameter_group_name = "default.mysql5.7"
   skip_final_snapshot  = true
 }
+# Create Security Group for Database
+# terraform aws create security group
+resource "aws_security_group" "SecurityGroupDB" {
+  name        = "Database Security Group"
+  description = "Enable MySQL on Port 3306"
+  vpc_id      = aws_vpc.main.id
+  ingress {
+    description     = "MySQL Access"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+  ingress {
+    description     = "MySQL Access"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.webserver-security-group2.id]
+  }
+  ingress {
+    description     = "MySQL Access"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.elb_http.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "SecurityGroupDB Security Group"
+  }
+}
+
+
 
