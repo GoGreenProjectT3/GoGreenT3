@@ -7,13 +7,6 @@ resource "aws_security_group" "webserver-security-group2" {
   name        = "Web Server Security Group"
   description = "Enable HTTP/HTTPS access on Port 80/443 via ALB and SSH access on Port 22 via SSH SG"
   vpc_id      = aws_vpc.main.id
-  # ingress {
-  #   description     = "SSH Access"
-  #   from_port       = 22
-  #   to_port         = 22
-  #   protocol        = "tcp"
-  #   security_groups = [aws_security_group.elb_http.id]
-  # }
   ingress {
     description     = "SSH Access"
     from_port       = 22
@@ -46,18 +39,6 @@ resource "aws_security_group" "webserver-security-group2" {
   }
 }
 
-resource "aws_launch_configuration" "web" {
-  name_prefix = "web-"
-
-  image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
-  instance_type               = "t2.micro"
-  security_groups             = [aws_security_group.webserver-security-group2.id]
-  associate_public_ip_address = false
-  user_data                   = file("user_data.sh")
-  lifecycle {
-    create_before_destroy = true
-  }
-}
 resource "aws_security_group" "elb_http" {
   name        = "elb_http"
   description = "Allow HTTP traffic to instances through Elastic Load Balancer"
@@ -95,205 +76,100 @@ resource "aws_security_group" "elb_http" {
   }
 }
 
-resource "aws_elb" "web_elb" {
-  name = "web-elb"
-  security_groups = [
-    aws_security_group.elb_http.id
-  ]
-  subnets = [
-    aws_subnet.public_subnet1a.id,
-    aws_subnet.public_subnet2c.id
-  ]
-  cross_zone_load_balancing = true
 
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 3
-    interval            = 30
-    target              = "HTTP:80/"
+data "aws_ami" "amznlx2" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-kernel-*-gp2"]
   }
-
-  listener {
-    lb_port           = 80
-    lb_protocol       = "http"
-    instance_port     = "80"
-    instance_protocol = "http"
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
   }
-
-}
-resource "aws_autoscaling_group" "web" {
-  name = "${aws_launch_configuration.web.name}-asg"
-
-  min_size         = 1
-  desired_capacity = 2
-  max_size         = 6
-
-  health_check_type = "ELB"
-  load_balancers = [
-    aws_elb.web_elb.id
-  ]
-
-  launch_configuration = aws_launch_configuration.web.name
-
-  enabled_metrics = [
-    "GroupMinSize",
-    "GroupMaxSize",
-    "GroupDesiredCapacity",
-    "GroupInServiceInstances",
-    "GroupTotalInstances"
-  ]
-
-  metrics_granularity = "1Minute"
-  vpc_zone_identifier = [aws_subnet.private_subnet1a.id]
-
-  # Required to redeploy without an outage.
-  lifecycle {
-    create_before_destroy = true
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
-
-  tag {
-    key                 = "Name"
-    value               = "web"
-    propagate_at_launch = true
-  }
-
-}
-resource "aws_autoscaling_policy" "web_policy_up" {
-  name                   = "web_policy_up"
-  scaling_adjustment     = 1
-  adjustment_type        = "ChangeInCapacity"
-  cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.web.name
 }
 
-resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_up" {
-  alarm_name          = "web_cpu_alarm_up"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "120"
-  statistic           = "Average"
-  threshold           = "60"
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web.name
-  }
-
-  alarm_description = "This metric monitor EC2 instance CPU utilization"
-  alarm_actions     = [aws_autoscaling_policy.web_policy_up.arn]
-}
-resource "aws_autoscaling_policy" "web_policy_down" {
-  name                   = "web_policy_down"
-  scaling_adjustment     = -1
-  adjustment_type        = "ChangeInCapacity"
-  cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.web.name
-}
-
-resource "aws_cloudwatch_metric_alarm" "web_cpu_alarm_down" {
-  alarm_name          = "web_cpu_alarm_down"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "120"
-  statistic           = "Average"
-  threshold           = "10"
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web.name
-  }
-
-  alarm_description = "This metric monitor EC2 instance CPU utilization"
-  alarm_actions     = [aws_autoscaling_policy.web_policy_down.arn]
-}
-resource "aws_launch_configuration" "app" {
-  name_prefix = "app-"
-
-  image_id                    = "ami-0d9858aa3c6322f73" # Amazon Linux 2 AMI (HVM), SSD Volume Type
+resource "aws_launch_configuration" "ec2_launcher" {
+  name_prefix                 = "alb-launcher"
+  image_id                    = data.aws_ami.amznlx2.id
   instance_type               = "t2.micro"
-  security_groups             = [aws_security_group.webserver-security-group2.id]
   associate_public_ip_address = false
+  security_groups             = [aws_security_group.webserver-security-group2.id]
   user_data                   = file("user_data.sh")
   lifecycle {
     create_before_destroy = true
   }
 }
 
-resource "aws_elb" "app_elb" {
-  name = "app-elb"
-  security_groups = [
-    aws_security_group.elb_http.id
-  ]
-  subnets = [
-    aws_subnet.public_subnet1a.id,
-    aws_subnet.public_subnet2c.id
-  ]
-  cross_zone_load_balancing = true
-
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 3
-    interval            = 30
-    target              = "HTTP:80/"
-  }
-
-  listener {
-    lb_port           = 80
-    lb_protocol       = "http"
-    instance_port     = "80"
-    instance_protocol = "http"
-  }
-
-}
-resource "aws_autoscaling_group" "app" {
-  name = "${aws_launch_configuration.app.name}-asg"
-
-  min_size         = 1
-  desired_capacity = 2
-  max_size         = 5
-
-  health_check_type = "ELB"
-  load_balancers = [
-    aws_elb.app_elb.id
-  ]
-
-  launch_configuration = aws_launch_configuration.app.name
-
-  enabled_metrics = [
-    "GroupMinSize",
-    "GroupMaxSize",
-    "GroupDesiredCapacity",
-    "GroupInServiceInstances",
-    "GroupTotalInstances"
-  ]
-
-  metrics_granularity = "1Minute"
-  vpc_zone_identifier = [aws_subnet.private_subnet1a.id]
-
-  # Required to redeploy without an outage.
+resource "aws_autoscaling_group" "ec2_scaling_rule1" {
+  name                 = "ec2-scaling"
+  vpc_zone_identifier  = [aws_subnet.private_subnet1a.id, aws_subnet.private_subnet2c.id]
+  launch_configuration = aws_launch_configuration.ec2_launcher.name
+  desired_capacity     = 2
+  max_size             = 5
+  min_size             = 1
   lifecycle {
     create_before_destroy = true
   }
 
+ 
   tag {
-    key                 = "Name"
-    value               = "app"
-    propagate_at_launch = true
+     key                 = "Name"
+     value               = "app-tier"
+    propagate_at_launch = "true"
   }
-
+   tag {
+    key                 = "lorem"
+    value               = "ipsum"
+    propagate_at_launch = false
+  }
 }
-resource "aws_autoscaling_policy" "app_policy_up" {
+
+resource "aws_lb" "app" {
+  name               = "app-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.elb_http.id]
+  subnets            = [aws_subnet.public_subnet1a.id, aws_subnet.public_subnet2c.id]
+  tags = {
+    "Name" = "APP"
+  }
+}
+
+resource "aws_lb_target_group" "ec2_target_group1" {
+  name     = "web-target-group1"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+}
+
+resource "aws_lb_listener" "lb_listener1" {
+  load_balancer_arn = aws_lb.app.arn
+  port              = 80
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ec2_target_group1.arn
+  }
+}
+
+resource "aws_autoscaling_attachment" "alb_asg_attach1" {
+  autoscaling_group_name = aws_autoscaling_group.ec2_scaling_rule1.id
+  alb_target_group_arn   = aws_lb_target_group.ec2_target_group1.arn
+}
+
+  resource "aws_autoscaling_policy" "app_policy_up" {
   name                   = "app_policy_up"
   scaling_adjustment     = 1
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.app.name
+  autoscaling_group_name = aws_autoscaling_group.ec2_scaling_rule1.name
 }
-
 resource "aws_cloudwatch_metric_alarm" "app_cpu_alarm_up" {
   alarm_name          = "app_cpu_alarm_up"
   comparison_operator = "GreaterThanOrEqualToThreshold"
@@ -305,10 +181,10 @@ resource "aws_cloudwatch_metric_alarm" "app_cpu_alarm_up" {
   threshold           = "60"
 
   dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.app.name
+    AutoScalingGroupName = aws_autoscaling_group.ec2_scaling_rule1.name
   }
 
-  alarm_description = "This metric monitor EC2 instance CPU utilization"
+alarm_description = "This metric monitor EC2 instance CPU utilization"
   alarm_actions     = [aws_autoscaling_policy.app_policy_up.arn]
 }
 resource "aws_autoscaling_policy" "app_policy_down" {
@@ -316,9 +192,8 @@ resource "aws_autoscaling_policy" "app_policy_down" {
   scaling_adjustment     = -1
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.app.name
+  autoscaling_group_name = aws_autoscaling_group.ec2_scaling_rule1.name
 }
-
 resource "aws_cloudwatch_metric_alarm" "app_cpu_alarm_down" {
   alarm_name          = "app_cpu_alarm_down"
   comparison_operator = "LessThanOrEqualToThreshold"
@@ -330,10 +205,8 @@ resource "aws_cloudwatch_metric_alarm" "app_cpu_alarm_down" {
   threshold           = "10"
 
   dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.app.name
+    AutoScalingGroupName = aws_autoscaling_group.ec2_scaling_rule1.name
   }
-
   alarm_description = "This metric monitor EC2 instance CPU utilization"
   alarm_actions     = [aws_autoscaling_policy.app_policy_down.arn]
 }
-

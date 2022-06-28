@@ -31,13 +31,7 @@ resource "aws_security_group" "SecurityGroupDB" {
   name        = "Database Security Group"
   description = "Enable MySQL on Port 3306"
   vpc_id      = aws_vpc.main.id
-  ingress {
-    description     = "MySQL Access"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
-  }
+
   ingress {
     description     = "MySQL Access"
     from_port       = 3306
